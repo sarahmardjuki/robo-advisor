@@ -1,5 +1,5 @@
 
-
+from datetime import datetime
 import requests
 import json
 
@@ -23,9 +23,16 @@ request_url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symb
 
 response = requests.get(request_url)
 parsed_response = json.loads(response.text)
+
+# request at:
+request_at = datetime.now()
+request_at_str = request_at.strftime('%Y-%m-%d %I:%M %p')
+
+# latest day and close
 latest_day = parsed_response["Meta Data"]["3. Last Refreshed"]
 latest_close = parsed_response["Time Series (Daily)"][latest_day]["4. close"]
 
+# recent high and low
 tsd = parsed_response["Time Series (Daily)"]
 high_prices = []
 low_prices = []
@@ -42,7 +49,7 @@ print("-------------------------")
 print(f"SELECTED SYMBOL: {stock}")
 print("-------------------------")
 print("REQUESTING STOCK MARKET DATA...")
-print(f"REQUEST AT: ")
+print(f"REQUEST AT: {request_at_str}")
 print("-------------------------")
 print(f"LATEST DAY: {latest_day}")
 print(f"LATEST CLOSE: {to_usd(float(latest_close))}")
