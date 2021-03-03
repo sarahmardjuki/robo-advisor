@@ -1,22 +1,11 @@
-""" print("-------------------------")
-print("SELECTED SYMBOL: XYZ")
-print("-------------------------")
-print("REQUESTING STOCK MARKET DATA...")
-print("REQUEST AT: 2018-02-20 02:00pm")
-print("-------------------------")
-print("LATEST DAY: 2018-02-20")
-print("LATEST CLOSE: $100,000.00")
-print("RECENT HIGH: $101,000.00")
-print("RECENT LOW: $99,000.00")
-print("-------------------------")
-print("RECOMMENDATION: BUY!")
-print("RECOMMENDATION REASON: TODO")
-print("-------------------------")
-print("HAPPY INVESTING!")
-print("-------------------------") """
+
 
 import requests
 import json
+
+# functions
+def to_usd(my_price):
+    return "${0:,.2f}".format(my_price)
 
 # USER INPUT
 while True:
@@ -34,5 +23,34 @@ request_url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symb
 
 response = requests.get(request_url)
 parsed_response = json.loads(response.text)
-print(parsed_response)
+latest_day = parsed_response["Meta Data"]["3. Last Refreshed"]
+latest_close = parsed_response["Time Series (Daily)"][latest_day]["4. close"]
 
+tsd = parsed_response["Time Series (Daily)"]
+high_prices = []
+low_prices = []
+for d in tsd:
+    high_price = tsd[d]["2. high"]
+    low_price = tsd[d]["3. low"]
+    high_prices.append(high_price)
+    low_prices.append(low_price)
+
+recent_high = max(high_prices)
+recent_low = min(high_prices)
+
+print("-------------------------")
+print(f"SELECTED SYMBOL: {stock}")
+print("-------------------------")
+print("REQUESTING STOCK MARKET DATA...")
+print(f"REQUEST AT: ")
+print("-------------------------")
+print(f"LATEST DAY: {latest_day}")
+print(f"LATEST CLOSE: {to_usd(float(latest_close))}")
+print(f"RECENT HIGH: {to_usd(float(recent_high))}")
+print(f"RECENT LOW: {to_usd(float(recent_low))}")
+print("-------------------------")
+print(f"RECOMMENDATION: ")
+print(f"RECOMMENDATION REASON: ")
+print("-------------------------")
+print("HAPPY INVESTING!")
+print("-------------------------")
