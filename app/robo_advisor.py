@@ -2,6 +2,8 @@
 from datetime import datetime
 import requests
 import json
+import os
+import csv
 
 # functions
 def to_usd(my_price):
@@ -45,6 +47,24 @@ for d in tsd:
 recent_high = max(high_prices)
 recent_low = min(high_prices)
 
+
+# WRITE TO CSV
+csv_file_path = os.path.join(os.path.dirname(__file__),"..","data","prices.csv")
+with open(csv_file_path, "w") as csv_file:
+    writer = csv.DictWriter(csv_file, fieldnames=["timestamp", "open", "high", "low", "close", "volume"])
+    writer.writeheader()
+    for d in tsd:
+        writer.writerow({
+            "timestamp": d,
+            "open": tsd[d]["1. open"],
+            "high": tsd[d]["2. high"],
+            "low": tsd[d]["3. low"],
+            "close": tsd[d]["4. close"],
+            "volume": tsd[d]["5. volume"],
+        })
+
+
+
 print("-------------------------")
 print(f"SELECTED SYMBOL: {stock}")
 print("-------------------------")
@@ -58,6 +78,8 @@ print(f"RECENT LOW: {to_usd(float(recent_low))}")
 print("-------------------------")
 print(f"RECOMMENDATION: ")
 print(f"RECOMMENDATION REASON: ")
+print("-------------------------")
+print("WRITING TO CSV...")
 print("-------------------------")
 print("HAPPY INVESTING!")
 print("-------------------------")
