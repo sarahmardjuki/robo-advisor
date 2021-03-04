@@ -49,11 +49,16 @@ request_at = datetime.now()
 request_at_str = request_at.strftime('%Y-%m-%d %I:%M %p')
 
 # latest day and close
-latest_day = parsed_response["Meta Data"]["3. Last Refreshed"]
-latest_close = parsed_response["Time Series (Daily)"][latest_day]["4. close"]
+tsd = parsed_response["Time Series (Daily)"]
+dates = list(tsd.keys())
+dates.sort(key=lambda date:datetime.strptime(date,"%Y-%m-%d"), reverse = True)
+
+latest_day = dates[0]
+latest_close = tsd[latest_day]["4. close"]
 
 # recent high and low
-tsd = parsed_response["Time Series (Daily)"]
+
+
 high_prices = []
 low_prices = []
 for d in tsd:
