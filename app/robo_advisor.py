@@ -1,9 +1,17 @@
 
-from datetime import datetime
 import requests
 import json
 import os
 import csv
+import pandas as pd
+import seaborn as sns
+from pandas import DataFrame
+
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import numpy as np
+
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv() # load contents of .env file to environment
@@ -46,7 +54,7 @@ while True:
 
 # request at:
 request_at = datetime.now()
-request_at_str = request_at.strftime('%Y-%m-%d %I:%M %p')
+request_at_str = request_at.strftime('%B %d, %Y %I:%M %p')
 
 # latest day and close
 tsd = parsed_response["Time Series (Daily)"]
@@ -54,6 +62,8 @@ dates = list(tsd.keys())
 dates.sort(key=lambda date:datetime.strptime(date,"%Y-%m-%d"), reverse = True)
 
 latest_day = dates[0]
+latest_day_str = datetime.strptime(latest_day,'%Y-%m-%d')
+latest_day_date = latest_day_str.strftime('%B %d, %Y')
 latest_close = tsd[latest_day]["4. close"]
 latest_volume = tsd[latest_day]["5. volume"]
 
@@ -62,9 +72,9 @@ high_prices = []
 low_prices = []
 high_volumes = []
 for d in tsd:
-    high_price = tsd[d]["2. high"]
-    low_price = tsd[d]["3. low"]
-    high_volume = tsd[d]["5. volume"]
+    high_price = float(tsd[d]["2. high"])
+    low_price = float(tsd[d]["3. low"])
+    high_volume = int(tsd[d]["5. volume"])
     high_prices.append(high_price)
     low_prices.append(low_price)
     high_volumes.append(high_volume)
@@ -72,6 +82,17 @@ for d in tsd:
 recent_high = max(high_prices)
 recent_low = min(high_prices)
 recent_high_volume = max(high_volumes)
+
+
+# get date for recent high and volume
+for d in tsd:
+    if float(tsd[d]["2. high"]) == recent_high:
+        recent_high_date = d
+        recent_high_datef = datetime.strptime(recent_high_date,'%Y-%m-%d').date()
+        print(recent_high_datef)
+    if float(tsd[d]["5. volume"]) == recent_high_volume:
+        recent_high_volume_date = d
+
 
 
 
@@ -117,14 +138,42 @@ with open(csv_file_path, "w") as csv_file:
         })
 
 
+# DATA VIZ
+
+line_data = []
+for d in tsd:
+    d_date = datetime.strptime(d,'%Y-%m-%d').date()
+    entry = {"Date": d_date, "StockPrice": float(tsd[d]["4. close"])}
+    line_data.append(entry)
+
+line_data.reverse()
+line_df = DataFrame(line_data)
+
+
+
+
+# pass our dataframe to the charting function, specifying which attribute to chart
+#plot = sns.lineplot(data=line_df,x="Date",y="Stock Price")
+
+plt.plot(line_df.Date, line_df.StockPrice, label="Daily Close Price")
+plt.ylabel("Stock Price ($)")
+plt.xlabel("Date")
+plt.axhline(y=float(recent_high), color='r', label=f"Recent High: {recent_high_datef}")
+plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
+            borderaxespad=0, frameon=False)
+plt.title(f"Plot of Prices for {stock.upper()}", y=1.07)
+plt.savefig('prices.png')
+plt.show()
+
+
 
 print("-------------------------")
-print(f"SELECTED SYMBOL: {stock}")
+print(f"SELECTED SYMBOL: {stock.upper()}")
 print("-------------------------")
 print("REQUESTING STOCK MARKET DATA...")
 print(f"REQUEST AT: {request_at_str}")
 print("-------------------------")
-print(f"LATEST DAY: {latest_day}")
+print(f"LATEST DAY: {latest_day_date}")
 print(f"LATEST CLOSE: {to_usd(float(latest_close))}")
 print(f"RECENT HIGH: {to_usd(float(recent_high))}")
 print(f"RECENT LOW: {to_usd(float(recent_low))}")
