@@ -122,7 +122,7 @@ elif (latest_close < recent_high) and (latest_volume < recent_high_volume):
 
 
 # WRITE TO CSV
-csv_file_path = os.path.join(os.path.dirname(__file__),"..","data","prices.csv")
+csv_file_path = os.path.join(os.path.dirname(__file__),"..","data","stockprices.csv")
 with open(csv_file_path, "w") as csv_file:
     writer = csv.DictWriter(csv_file, fieldnames=["timestamp", "open", "high", "low", "close", "volume"])
     writer.writeheader()
