@@ -1,0 +1,7 @@
+# this is the "visualizations/.gitignore" file
+
+# ignore all files in this "visualizations" directory:
+*
+
+# except this ".gitignore" file:
+!.gitignore
