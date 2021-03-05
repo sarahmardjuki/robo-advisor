@@ -172,6 +172,7 @@ line_data.reverse()
 line_df = DataFrame(line_data)
 
 # plot price graph and recent high line
+plt.figure(1)
 plt.plot(line_df.Date, line_df.StockPrice, label="Daily Close Price")
 plt.ylabel("Stock Price ($)")
 plt.xlabel("Date")
@@ -180,7 +181,6 @@ plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
             borderaxespad=0, frameon=False)
 plt.title(f"Plot of Prices for {stock.upper()}", y=1.07)
 plt.savefig('visualizations/prices.png')
-plt.show()
 
 # create data frame for volume
 volumeline_data = []
@@ -194,6 +194,7 @@ volumeline_df = DataFrame(volumeline_data)
 recent_high_volume = int(max(high_volumes))
 
 # plot volume graph and recent high volume line
+plt.figure(2)
 plt.plot(volumeline_df.Date, volumeline_df.Volume, label="Daily Volume")
 plt.ylabel("Daily Volume (# Shares)")
 plt.xlabel("Date")
