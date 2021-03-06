@@ -38,6 +38,13 @@ while True:
         else:
             invalidsymbol = 0
 
+    if len(parsed_response) == 0:
+        invalidsymbol = 1
+
+
+    print(parsed_response)
+    print("here")
+    print(invalidsymbol)
     # data validate
     if len(stock) > 6:
         print("Hm, that doesn't look like a valid symbol. Please try again!")
@@ -101,23 +108,22 @@ if (latest_close > recent_high) and (latest_volume > yesterday_volume):
     latest_volume = "{:,}".format(latest_volume)
     yesterday_volume = "{:,}".format(yesterday_volume)
     recommendation = "BUY"
-    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is greater than its recent high of {to_usd(recent_high)}, and its most recent volume of {latest_volume} is also greater than its recent high volume of {yesterday_volume}. This indicates that demand will likely continue pushing the price up."
-elif (latest_close > recent_high) and (latest_volume < yesterday_volume):
+    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is greater than its recent high of {to_usd(recent_high)}, and its most recent volume of {latest_volume} is also greater than its previous day volume of {yesterday_volume}. This indicates that demand will likely continue pushing the price up."
+elif (latest_close > recent_high) and (latest_volume <= yesterday_volume):
     latest_volume = "{:,}".format(latest_volume)
-    ryesterday_volume= "{:,}".format(yesterday_volume)
+    yesterday_volume= "{:,}".format(yesterday_volume)
     recommendation = "DON'T BUY"
-    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is greater than its recent high of {to_usd(recent_high)}, but its most recent volume of {latest_volume} is not greater than its recent high volume of {yesterday_volume}. This indicates that it is likely not demand pushing the price up, and the price may not continue increasing."
-elif (latest_close < recent_high) and (latest_volume > yesterday_volume):
-    latest_volume = "{:,}".format(latest_volume)
-    yesterday_volume = "{:,}".format(yesterday_volume)
-    recommendation = "DON'T BUY"
-    reason = f"Even though {stock.upper()}'s most recent volume of {latest_volume} is greater than its recent high volume of {yesterday_volume}, its latest close of {to_usd(latest_close)} is less than its recent high of {to_usd(float(recent_high))}."
-elif (latest_close < recent_high) and (latest_volume < yesterday_volume):
+    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is greater than its recent high of {to_usd(recent_high)}, but its most recent volume of {latest_volume} is not greater than its previous day volume of {yesterday_volume}. This indicates that it is likely not demand pushing the price up, and the price may not continue increasing."
+elif (latest_close <= recent_high) and (latest_volume > yesterday_volume):
     latest_volume = "{:,}".format(latest_volume)
     yesterday_volume = "{:,}".format(yesterday_volume)
     recommendation = "DON'T BUY"
-    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is not greater than its recent high of {to_usd(recent_high)}, and its most recent volume of {latest_volume} is not greater than its recent high volume of {yesterday_volume}. This indicates that there is not much interest in this stock, and the price may not increase in the near future."
-
+    reason = f"Even though {stock.upper()}'s most recent volume of {latest_volume} is greater than its previous day volume of {yesterday_volume}, its latest close of {to_usd(latest_close)} is not greater than its recent high of {to_usd(float(recent_high))}."
+elif (latest_close <= recent_high) and (latest_volume <= yesterday_volume):
+    latest_volume = "{:,}".format(latest_volume)
+    yesterday_volume = "{:,}".format(yesterday_volume)
+    recommendation = "DON'T BUY"
+    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is not greater than its recent high of {to_usd(recent_high)}, and its most recent volume of {latest_volume} is not greater than its previous day volume of {yesterday_volume}. This indicates that there is not much interest in this stock, and the price may not increase in the near future."
 
 
 # WRITE TO CSV
