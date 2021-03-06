@@ -62,6 +62,7 @@ dates = list(tsd.keys())
 dates.sort(key=lambda date:datetime.strptime(date,"%Y-%m-%d"), reverse = True)
 
 latest_day = dates[0]
+yesterday = dates[1]
 latest_day_str = datetime.strptime(latest_day,'%Y-%m-%d')
 latest_day_date = latest_day_str.strftime('%B %d, %Y')
 latest_close = float(tsd[latest_day]["4. close"])
@@ -70,54 +71,52 @@ latest_volume = int(tsd[latest_day]["5. volume"])
 # recent high and low and volume
 high_prices = []
 low_prices = []
-high_volumes = []
 for d in tsd:
     high_price = float(tsd[d]["2. high"])
     low_price = float(tsd[d]["3. low"])
-    high_volume = int(tsd[d]["5. volume"])
     high_prices.append(high_price)
     low_prices.append(low_price)
-    high_volumes.append(high_volume)
 
 recent_high = float(max(high_prices))
 recent_low = float(min(high_prices))
-recent_high_volume = int(max(high_volumes))
 
 
-# get date for recent high and volume
+
+# get date for recent high 
 for d in tsd:
     if float(tsd[d]["2. high"]) == recent_high:
         recent_high_date = d
         recent_high_datef = datetime.strptime(recent_high_date,'%Y-%m-%d').date()
-    if float(tsd[d]["5. volume"]) == recent_high_volume:
-        recent_high_volume_date = d
-        recent_high_volume_datef = datetime.strptime(recent_high_volume_date,'%Y-%m-%d').date()
+    
 
+# get yesterday's volume
+yesterday_volume = int(tsd[yesterday]["5. volume"])
+yesterday_date = datetime.strptime(yesterday,'%Y-%m-%d').date()
 
 
 # RECOMMENDATION AND REASON
 
-# if close price is > recent high and volume is > recent high volume, then BUY
-if (latest_close > recent_high) and (latest_volume > recent_high_volume):
+# if close price is > recent high and volume is > yesterday's volume, then BUY
+if (latest_close > recent_high) and (latest_volume > yesterday_volume):
     latest_volume = "{:,}".format(latest_volume)
-    recent_high_volume = "{:,}".format(recent_high_volume)
+    yesterday_volume = "{:,}".format(yesterday_volume)
     recommendation = "BUY"
-    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is greater than its recent high of {to_usd(recent_high)}, and its most recent volume of {latest_volume} is also greater than its recent high volume of {recent_high_volume}. This indicates that demand will likely continue pushing the price up."
-elif (latest_close > recent_high) and (latest_volume < recent_high_volume):
+    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is greater than its recent high of {to_usd(recent_high)}, and its most recent volume of {latest_volume} is also greater than its recent high volume of {yesterday_volume}. This indicates that demand will likely continue pushing the price up."
+elif (latest_close > recent_high) and (latest_volume < yesterday_volume):
     latest_volume = "{:,}".format(latest_volume)
-    recent_high_volume = "{:,}".format(recent_high_volume)
+    ryesterday_volume= "{:,}".format(yesterday_volume)
     recommendation = "DON'T BUY"
-    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is greater than its recent high of {to_usd(recent_high)}, but its most recent volume of {latest_volume} is not greater than its recent high volume of {recent_high_volume}. This indicates that it is likely not demand pushing the price up, and the price may not continue increasing."
-elif (latest_close < recent_high) and (latest_volume > recent_high_volume):
+    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is greater than its recent high of {to_usd(recent_high)}, but its most recent volume of {latest_volume} is not greater than its recent high volume of {yesterday_volume}. This indicates that it is likely not demand pushing the price up, and the price may not continue increasing."
+elif (latest_close < recent_high) and (latest_volume > yesterday_volume):
     latest_volume = "{:,}".format(latest_volume)
-    recent_high_volume = "{:,}".format(recent_high_volume)
+    yesterday_volume = "{:,}".format(yesterday_volume)
     recommendation = "DON'T BUY"
-    reason = f"Even though {stock.upper()}'s most recent volume of {latest_volume} is greater than its recent high volume of {recent_high_volume}, its latest close of {to_usd(latest_close)} is less than its recent high of {to_usd(float(recent_high))}."
-elif (latest_close < recent_high) and (latest_volume < recent_high_volume):
+    reason = f"Even though {stock.upper()}'s most recent volume of {latest_volume} is greater than its recent high volume of {yesterday_volume}, its latest close of {to_usd(latest_close)} is less than its recent high of {to_usd(float(recent_high))}."
+elif (latest_close < recent_high) and (latest_volume < yesterday_volume):
     latest_volume = "{:,}".format(latest_volume)
-    recent_high_volume = "{:,}".format(recent_high_volume)
+    yesterday_volume = "{:,}".format(yesterday_volume)
     recommendation = "DON'T BUY"
-    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is not greater than its recent high of {to_usd(recent_high)}, and its most recent volume of {latest_volume} is not greater than its recent high volume of {recent_high_volume}. This indicates that there is not much interest in this stock, and the price may not increase in the near future."
+    reason = f"{stock.upper()}'s latest close of {to_usd(latest_close)} is not greater than its recent high of {to_usd(recent_high)}, and its most recent volume of {latest_volume} is not greater than its recent high volume of {yesterday_volume}. This indicates that there is not much interest in this stock, and the price may not increase in the near future."
 
 
 
@@ -191,14 +190,14 @@ for d in tsd:
 
 volumeline_data.reverse()
 volumeline_df = DataFrame(volumeline_data)
-recent_high_volume = int(max(high_volumes))
+yesterday_volume = int(tsd[yesterday]["5. volume"])
 
 # plot volume graph and recent high volume line
 plt.figure(2)
 plt.plot(volumeline_df.Date, volumeline_df.Volume, label="Daily Volume")
 plt.ylabel("Daily Volume (# Shares)")
 plt.xlabel("Date")
-plt.axhline(y=recent_high_volume, color='r', label=f"Recent High for Volume: {recent_high_volume_datef}")
+plt.axhline(y=yesterday_volume, color='r', label=f"Previous Day's Volume: {yesterday_date}")
 plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
             borderaxespad=0, frameon=False)
 plt.title(f"Plot of Daily Volume for {stock.upper()}", y=1.07)
