@@ -24,6 +24,9 @@ def to_usd(my_price):
 api_key = os.environ.get("ALPHAVANTAGE_API_KEY")
 
 # USER INPUT
+
+
+
 while True:
     stock = input("Please enter a stock or cryptocurrency symbol: ")
 
@@ -42,9 +45,6 @@ while True:
         invalidsymbol = 1
 
 
-    print(parsed_response)
-    print("here")
-    print(invalidsymbol)
     # data validate
     if len(stock) > 6:
         print("Hm, that doesn't look like a valid symbol. Please try again!")
@@ -177,7 +177,7 @@ line_data.reverse()
 line_df = DataFrame(line_data)
 
 # plot price graph and recent high line
-plt.figure(1)
+plt.subplot(1,2,1)
 plt.plot(line_df.Date, line_df.StockPrice, label="Daily Close Price")
 plt.ylabel("Stock Price ($)")
 plt.xlabel("Date")
@@ -199,7 +199,7 @@ volumeline_df = DataFrame(volumeline_data)
 yesterday_volume = int(tsd[yesterday]["5. volume"])
 
 # plot volume graph and recent high volume line
-plt.figure(2)
+plt.subplot(1,2,2)
 plt.plot(volumeline_df.Date, volumeline_df.Volume, label="Daily Volume")
 plt.ylabel("Daily Volume (# Shares)")
 plt.xlabel("Date")
