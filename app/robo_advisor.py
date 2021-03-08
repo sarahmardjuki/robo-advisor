@@ -87,9 +87,7 @@ request_at_f = request_at.strftime('%B %d, %Y %I:%M %p')
 outputs = []
 
 for x in parsed_responses_daily:
-    
     # symbol
-    print(x)
     sym = x["Meta Data"]["2. Symbol"]
 
     # latest day
