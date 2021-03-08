@@ -36,45 +36,47 @@ while True:
     if stock.lower() == "done":
         break
 
-    request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={stock}&apikey={api_key}"
-
-    response = requests.get(request_url)
-    parsed_response = json.loads(response.text)
-    for key, value in parsed_response.items():
-        if key == "Error Message":
-            invalidsymbol = 1
-            break 
-        else:
-            invalidsymbol = 0
-
-    if len(parsed_response) == 0:
-        invalidsymbol = 1
-
-    for y in stocks:
-        if y == stock:
-            symexists = 1
-        else:
-            symexists = 0
-
-    # data validate
+    # preliminary data validation
     if len(stock) > 6:
         print("Hm, that doesn't look like a valid symbol. Please try again!")
         next
     elif stock.isnumeric() == True:
         print("Hm, that doesn't look like a valid symbol. Please try again!")
         next
-    elif invalidsymbol == 1:
-        print("Hm, that doesn't look like a valid symbol. Please try again!")
-        next
-    elif symexists == 1:
-        print("You've already entered that symbol!")
-        next
-    elif num_stocks > 4:
-        print("Sorry, we can only handle 5 stocks at a time. Please type 'DONE' to run analysis.")
-    else:
-        stocks.append(stock.upper())
-        parsed_responses_daily.append(parsed_response)
-        num_stocks += 1
+    else:    
+        request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={stock}&apikey={api_key}"
+
+        response = requests.get(request_url)
+        parsed_response = json.loads(response.text)
+        for key, value in parsed_response.items():
+            if key == "Error Message":
+                invalidsymbol = 1
+                break 
+            else:
+                invalidsymbol = 0
+
+        if len(parsed_response) == 0:
+            invalidsymbol = 1
+
+        for y in stocks:
+            if y == stock:
+                symexists = 1
+            else:
+                symexists = 0
+
+        # data validate
+        if invalidsymbol == 1:
+            print("Hm, that doesn't look like a valid symbol. Please try again!")
+            next
+        elif symexists == 1:
+            print("You've already entered that symbol!")
+            next
+        elif num_stocks > 4:
+            print("Sorry, we can only handle 5 stocks at a time. Please type 'DONE' to run analysis.")
+        else:
+            stocks.append(stock.upper())
+            parsed_responses_daily.append(parsed_response)
+            num_stocks += 1
 
 
 # request at:
