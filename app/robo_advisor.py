@@ -27,9 +27,11 @@ api_key = os.environ.get("ALPHAVANTAGE_API_KEY")
 
 stocks = []
 parsed_responses_daily = []
+num_stocks = 0
+symexists = 0
 
 while True:
-    stock = input("Please enter a stock or cryptocurrency symbol (type 'DONE' when finished): ")
+    stock = input("Please enter a stock or cryptocurrency symbol (type 'DONE' when finished, max 5 symbols): ")
     stock = stock.upper()
     if stock.lower() == "done":
         break
@@ -48,6 +50,11 @@ while True:
     if len(parsed_response) == 0:
         invalidsymbol = 1
 
+    for y in stocks:
+        if y == stock:
+            symexists = 1
+        else:
+            symexists = 0
 
     # data validate
     if len(stock) > 6:
@@ -59,9 +66,15 @@ while True:
     elif invalidsymbol == 1:
         print("Hm, that doesn't look like a valid symbol. Please try again!")
         next
+    elif symexists == 1:
+        print("You've already entered that symbol!")
+        next
+    elif num_stocks > 4:
+        print("Sorry, we can only handle 5 stocks at a time. Please type 'DONE' to run analysis.")
     else:
         stocks.append(stock.upper())
         parsed_responses_daily.append(parsed_response)
+        num_stocks += 1
 
 
 # request at:
@@ -74,6 +87,7 @@ outputs = []
 for x in parsed_responses_daily:
     
     # symbol
+    print(x)
     sym = x["Meta Data"]["2. Symbol"]
 
     # latest day
