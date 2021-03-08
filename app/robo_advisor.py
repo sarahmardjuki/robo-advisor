@@ -275,7 +275,7 @@ for x in parsed_responses_daily:
     plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
                 borderaxespad=0, frameon=False)
     plt.title(f"Plot of Prices for {sym}", y=1.07)
-    plt.savefig('visualizations/prices.png')
+    plt.savefig(f'visualizations/prices_{sym}.png')
 
     # create data frame for volume
     volumeline_data = []
@@ -297,7 +297,7 @@ for x in parsed_responses_daily:
     plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
                 borderaxespad=0, frameon=False)
     plt.title(f"Plot of Daily Volume for {sym}", y=1.07)
-    plt.savefig('visualizations/volumes.png')
+    plt.savefig(f'visualizations/volumes_{sym}.png')
 
     count += 1
 
