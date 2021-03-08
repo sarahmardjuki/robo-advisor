@@ -220,11 +220,12 @@ print("-------------------------")
 
 
 # DATA VIZ
-
+count = 1
 for x in parsed_responses_daily:
     
     # create data frame for prices
     line_data = []
+    tsd = x["Time Series (Daily)"]
     for d in tsd:
         d_date = datetime.strptime(d,'%Y-%m-%d').date()
         entry = {"Date": d_date, "StockPrice": float(tsd[d]["4. close"])}
@@ -233,7 +234,25 @@ for x in parsed_responses_daily:
     line_data.reverse()
     line_df = DataFrame(line_data)
 
+    # get symbol
+    sym = x["Meta Data"]["2. Symbol"]
+
+    # get recent high and date
+    high_prices = []
+    for d in tsd:
+        high_price = float(tsd[d]["2. high"])
+        high_prices.append(high_price)
+
+    recent_high = float(max(high_prices))
+
+    # get date for recent high 
+    for d in tsd:
+        if float(tsd[d]["2. high"]) == recent_high:
+            recent_high_date = d
+            recent_high_datef = datetime.strptime(recent_high_date,'%Y-%m-%d').date()
+
     # plot price graph and recent high line
+    plt.figure(count)
     plt.subplot(1,2,1)
     plt.plot(line_df.Date, line_df.StockPrice, label="Daily Close Price")
     plt.ylabel("Stock Price ($)")
@@ -241,7 +260,7 @@ for x in parsed_responses_daily:
     plt.axhline(y=recent_high, color='r', label=f"Recent High: {recent_high_datef}")
     plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
                 borderaxespad=0, frameon=False)
-    plt.title(f"Plot of Prices for {stock.upper()}", y=1.07)
+    plt.title(f"Plot of Prices for {sym}", y=1.07)
     plt.savefig('visualizations/prices.png')
 
     # create data frame for volume
@@ -263,6 +282,9 @@ for x in parsed_responses_daily:
     plt.axhline(y=yesterday_volume, color='r', label=f"Previous Day's Volume: {yesterday_date}")
     plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
                 borderaxespad=0, frameon=False)
-    plt.title(f"Plot of Daily Volume for {stock.upper()}", y=1.07)
+    plt.title(f"Plot of Daily Volume for {sym}", y=1.07)
     plt.savefig('visualizations/volumes.png')
-    plt.show()
+
+    count += 1
+
+plt.show()
