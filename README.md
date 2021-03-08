@@ -41,5 +41,12 @@ python app/robo-advisor.py
 ```
 
 ## Setup: Alpha Vantage API
-https://www.alphavantage.co/support/#api-key
+Visit the [Alpha Vantage website](https://www.alphavantage.co/support/#api-key) to obtain your personal API key. Input your information, then copy the generated API key. 
+
+Create a new file called ".env" in the root directory of your local repository. In this file, create a variable called ALPHAVANTAGE_API_KEY and set it equal to the key.
+
+```sh
+ALPHAVANTAGE_API_KEY = "example123"
+```
+
 
