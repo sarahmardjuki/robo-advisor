@@ -1,7 +1,7 @@
 # Robo-Advisor
 The following sections will provide setup instructions and command lines needed to run the program from scratch.
 
-This program allows the user to input stock or cryptocurrency tickers. The program will utilize the AlphaVantage API to get price data and make a buy  / do not buy recommendation based on the recent high and yesterday's volume. 
+This program allows the user to input stock or cryptocurrency tickers. The program will utilize the Alpha Vantage API to get price data and make a buy  / do not buy recommendation based on the recent high and yesterday's volume. 
 
 The program can handle up to 5 tickers at a time, and will generate price and volume data visualizations to help clarify the recommendation reason. The program will store CSVs of the ticker's data in the "data" directory, and will store the visualizations in the "visualizations" directory.
 
@@ -39,3 +39,7 @@ Now you're ready to use the program! Run the Python script from the command-line
 ```sh
 python app/robo-advisor.py
 ```
+
+## Setup: Alpha Vantage API
+https://www.alphavantage.co/support/#api-key
+
