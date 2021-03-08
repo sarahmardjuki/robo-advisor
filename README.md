@@ -35,10 +35,6 @@ Once you're inside the virtual environment, install the packages before trying t
 pip install -r requirements.txt
 ```
 
-Now you're ready to use the program! Run the Python script from the command-line:
-```sh
-python app/robo-advisor.py
-```
 
 ## Setup: Alpha Vantage API
 Visit the [Alpha Vantage website](https://www.alphavantage.co/support/#api-key) to obtain your personal API key. Input your information, then copy the generated API key. 
@@ -49,4 +45,9 @@ Create a new file called ".env" in the root directory of your local repository. 
 ALPHAVANTAGE_API_KEY = "example123"
 ```
 
+## Running the Program
+Now you're ready to use the program! Run the Python script from the command-line:
+```sh
+python app/robo-advisor.py
+```
 

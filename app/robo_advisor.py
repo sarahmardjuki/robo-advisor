@@ -4,7 +4,6 @@ import json
 import os
 import csv
 import pandas as pd
-import seaborn as sns
 from pandas import DataFrame
 
 import matplotlib.pyplot as plt
@@ -179,7 +178,6 @@ for x in parsed_responses_daily:
                 "volume": tsd[d]["5. volume"],
             })
 
-
 # OUTPUT
 summary = []
 
@@ -266,7 +264,7 @@ for x in parsed_responses_daily:
             recent_high_datef = datetime.strptime(recent_high_date,'%Y-%m-%d').date()
 
     # plot price graph and recent high line
-    plt.figure(count)
+    plt.figure(count,figsize=(12,5))
     plt.subplot(1,2,1)
     plt.plot(line_df.Date, line_df.StockPrice, label="Daily Close Price")
     plt.ylabel("Stock Price ($)")
@@ -275,7 +273,6 @@ for x in parsed_responses_daily:
     plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
                 borderaxespad=0, frameon=False)
     plt.title(f"Plot of Prices for {sym}", y=1.07)
-    plt.savefig(f'visualizations/prices_{sym}.png')
 
     # create data frame for volume
     volumeline_data = []
@@ -297,7 +294,7 @@ for x in parsed_responses_daily:
     plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
                 borderaxespad=0, frameon=False)
     plt.title(f"Plot of Daily Volume for {sym}", y=1.07)
-    plt.savefig(f'visualizations/volumes_{sym}.png')
+    plt.savefig(f'visualizations/pricesandvolumes_{sym}.png')
 
     count += 1
 
