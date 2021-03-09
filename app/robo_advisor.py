@@ -24,7 +24,7 @@ api_key = os.environ.get("ALPHAVANTAGE_API_KEY")
 # USER INPUT
 
 stocks = []
-parsed_responses_daily = []
+parsed_responses_weekly = []
 num_stocks = 0
 symexists = 0
 
@@ -42,7 +42,7 @@ while True:
         print("Hm, that doesn't look like a valid symbol. Please try again!")
         next
     else:    
-        request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={stock}&apikey={api_key}"
+        request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol={stock}&apikey={api_key}"
 
         response = requests.get(request_url)
         parsed_response = json.loads(response.text)
@@ -73,7 +73,7 @@ while True:
             print("Sorry, we can only handle 5 stocks at a time. Please type 'DONE' to run analysis.")
         else:
             stocks.append(stock.upper())
-            parsed_responses_daily.append(parsed_response)
+            parsed_responses_weekly.append(parsed_response)
             num_stocks += 1
 
 
@@ -84,67 +84,76 @@ request_at_f = request_at.strftime('%B %d, %Y %I:%M %p')
 # create list of output dictionaries for each stock
 outputs = []
 
-for x in parsed_responses_daily:
+for x in parsed_responses_weekly:
     # symbol
     sym = x["Meta Data"]["2. Symbol"]
 
     # latest day
-    tsd = x["Time Series (Daily)"]
-    dates = list(tsd.keys())
+    tsw = x["Weekly Time Series"]
+    dates = list(tsw.keys())
     dates.sort(key=lambda date:datetime.strptime(date,"%Y-%m-%d"), reverse = True)
     latest_day = dates[0]
     latest_day_str = datetime.strptime(latest_day,'%Y-%m-%d')
     latest_day_date = latest_day_str.strftime('%B %d, %Y')
 
     # latest close 
-    latest_close = float(tsd[latest_day]["4. close"])
+    latest_close = float(tsw[latest_day]["4. close"])
 
-    # recent high and low
+    # 52 wk high and low
     high_prices = []
     low_prices = []
-    for d in tsd:
-        high_price = float(tsd[d]["2. high"])
-        low_price = float(tsd[d]["3. low"])
-        high_prices.append(high_price)
-        low_prices.append(low_price)
+    iter = 1
+    for d in tsw:
+        if iter <= 52:
+            high_price = float(tsw[d]["2. high"])
+            low_price = float(tsw[d]["3. low"])
+            high_prices.append(high_price)
+            low_prices.append(low_price)
+            iter += 1
+        else:
+            break
 
-    recent_high = float(max(high_prices))
-    recent_low = float(min(high_prices))
+    ftweek_high = float(max(high_prices))
+    ftweek_low = float(min(low_prices))
 
-    # get date for recent high 
-    for d in tsd:
-        if float(tsd[d]["2. high"]) == recent_high:
-            recent_high_date = d
-            recent_high_datef = datetime.strptime(recent_high_date,'%Y-%m-%d').date()
+    # get date for 52wk high 
+    iter = 1
+    for d in tsw:
+        if iter <= 52:
+            if float(tsw[d]["2. high"]) == ftweek_high:
+                ftweek_high_date = d
+                ftweek_high_datef = datetime.strptime(ftweek_high_date,'%Y-%m-%d').date()
+        else:
+            break
 
     # volume
-    yesterday = dates[1]
-    latest_volume = int(tsd[latest_day]["5. volume"])
-    yesterday_volume = int(tsd[yesterday]["5. volume"])
-    yesterday_date = datetime.strptime(yesterday,'%Y-%m-%d').date()
+    lastwk = dates[1]
+    latest_volume = int(tsw[latest_day]["5. volume"])
+    lastwk_volume = int(tsw[lastwk]["5. volume"])
+    lastwk_date = datetime.strptime(lastwk,'%Y-%m-%d').date()
 
     # recommendation/reason
-    # if close price is > recent high and volume is > yesterday's volume, then BUY
-    if (latest_close > recent_high) and (latest_volume > yesterday_volume):
+    # if close price is > 52wk high and volume is > last week's volume, then BUY
+    if (latest_close > ftweek_high) and (latest_volume > lastwk_volume):
         latest_volume = "{:,}".format(latest_volume)
-        yesterday_volume = "{:,}".format(yesterday_volume)
+        lastwk_volume = "{:,}".format(lastwk_volume)
         recommendation = "BUY"
-        reason = f"{sym}'s latest close of {to_usd(latest_close)} is greater than its recent high of {to_usd(recent_high)}, and its most recent volume of {latest_volume} is also greater than its previous day volume of {yesterday_volume}. This indicates that demand will likely continue pushing the price up."
-    elif (latest_close > recent_high) and (latest_volume <= yesterday_volume):
+        reason = f"{sym}'s latest close of {to_usd(latest_close)} is greater than its 52-week high of {to_usd(ftweek_high)}, and its most recent volume of {latest_volume} is also greater than last week's volume of {lastwk_volume}. This indicates that demand will likely continue pushing the price up."
+    elif (latest_close > ftweek_high) and (latest_volume <= lastwk_volume):
         latest_volume = "{:,}".format(latest_volume)
-        yesterday_volume= "{:,}".format(yesterday_volume)
+        lastwk_volume= "{:,}".format(lastwk_volume)
         recommendation = "DON'T BUY"
-        reason = f"{sym}'s latest close of {to_usd(latest_close)} is greater than its recent high of {to_usd(recent_high)}, but its most recent volume of {latest_volume} is not greater than its previous day volume of {yesterday_volume}. This indicates that it is likely not demand pushing the price up, and the price may not continue increasing."
-    elif (latest_close <= recent_high) and (latest_volume > yesterday_volume):
+        reason = f"{sym}'s latest close of {to_usd(latest_close)} is greater than its 52-week high of {to_usd(ftweek_high)}, but its most recent volume of {latest_volume} is not greater than last week's volume of {lastwk_volume}. This indicates that it is likely not demand pushing the price up, and the price may not continue increasing."
+    elif (latest_close <= ftweek_high) and (latest_volume > lastwk_volume):
         latest_volume = "{:,}".format(latest_volume)
-        yesterday_volume = "{:,}".format(yesterday_volume)
+        lastwk_volume = "{:,}".format(lastwk_volume)
         recommendation = "DON'T BUY"
-        reason = f"Even though {sym}'s most recent volume of {latest_volume} is greater than its previous day volume of {yesterday_volume}, its latest close of {to_usd(latest_close)} is not greater than its recent high of {to_usd(float(recent_high))}."
-    elif (latest_close <= recent_high) and (latest_volume <= yesterday_volume):
+        reason = f"Even though {sym}'s most recent volume of {latest_volume} is greater than last week's volume of {lastwk_volume}, its latest close of {to_usd(latest_close)} is not greater than its 52-week high of {to_usd(float(ftweek_high))}."
+    elif (latest_close <= ftweek_high) and (latest_volume <= lastwk_volume):
         latest_volume = "{:,}".format(latest_volume)
-        yesterday_volume = "{:,}".format(yesterday_volume)
+        lastwk_volume = "{:,}".format(lastwk_volume)
         recommendation = "DON'T BUY"
-        reason = f"{sym}'s latest close of {to_usd(latest_close)} is not greater than its recent high of {to_usd(recent_high)}, and its most recent volume of {latest_volume} is not greater than its previous day volume of {yesterday_volume}. This indicates that there is not much interest in this stock, and the price may not increase in the near future."
+        reason = f"{sym}'s latest close of {to_usd(latest_close)} is not greater than its 52-week high of {to_usd(ftweek_high)}, and its most recent volume of {latest_volume} is not greater than last week's volume of {lastwk_volume}. This indicates that there is not much interest in this stock, and the price may not increase in the near future."
 
 
     
@@ -153,8 +162,8 @@ for x in parsed_responses_daily:
         "Request At": request_at_f,
         "Latest Day": latest_day_date,
         "Latest Close": to_usd(latest_close),
-        "Recent High": to_usd(recent_high),
-        "Recent Low": to_usd(recent_low),
+        "52 Wk High": to_usd(ftweek_high),
+        "52 Wk Low": to_usd(ftweek_low),
         "Recommendation": recommendation,
         "Reason": reason,
     }
@@ -167,14 +176,14 @@ for x in parsed_responses_daily:
     with open(csv_file_path, "w") as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=["timestamp", "open", "high", "low", "close", "volume"])
         writer.writeheader()
-        for d in tsd:
+        for d in tsw:
             writer.writerow({
                 "timestamp": d,
-                "open": tsd[d]["1. open"],
-                "high": tsd[d]["2. high"],
-                "low": tsd[d]["3. low"],
-                "close": tsd[d]["4. close"],
-                "volume": tsd[d]["5. volume"],
+                "open": tsw[d]["1. open"],
+                "high": tsw[d]["2. high"],
+                "low": tsw[d]["3. low"],
+                "close": tsw[d]["4. close"],
+                "volume": tsw[d]["5. volume"],
             })
 
 # OUTPUT
@@ -192,8 +201,8 @@ for x in outputs:
     request_at_output = x["Request At"]
     latest_day_output = x["Latest Day"]
     latest_close_output = x["Latest Close"]
-    recent_high_output = x["Recent High"]
-    recent_low_output = x["Recent Low"]
+    ftwk_high_output = x["52 Wk High"]
+    ftwk_low_output = x["52 Wk Low"]
     recommendation_output = x["Recommendation"]
     reason_output = x["Reason"]
 
@@ -211,8 +220,8 @@ for x in outputs:
     print("-------------------------")
     print(f"LATEST DAY: {latest_day_output}")
     print(f"LATEST CLOSE: {latest_close_output}")
-    print(f"RECENT HIGH: {recent_high_output}")
-    print(f"RECENT LOW: {recent_low_output}")
+    print(f"52 WK HIGH: {ftwk_high_output}")
+    print(f"52 WK LOW: {ftwk_low_output}")
     print("-------------------------")
     print(f"RECOMMENDATION: {recommendation_output}")
     print(f"RECOMMENDATION REASON: {reason_output}")
@@ -232,15 +241,20 @@ print("-------------------------")
 
 # DATA VIZ
 count = 1
-for x in parsed_responses_daily:
+for x in parsed_responses_weekly:
     
     # create data frame for prices
     line_data = []
-    tsd = x["Time Series (Daily)"]
-    for d in tsd:
-        d_date = datetime.strptime(d,'%Y-%m-%d').date()
-        entry = {"Date": d_date, "StockPrice": float(tsd[d]["4. close"])}
-        line_data.append(entry)
+    tsw = x["Weekly Time Series"]
+    iterate = 1
+    for d in tsw:
+        if iterate <= 52:
+            d_date = datetime.strptime(d,'%Y-%m-%d').date()
+            entry = {"Date": d_date, "StockPrice": float(tsw[d]["4. close"])}
+            line_data.append(entry)
+            iterate += 1
+        else:
+            break
 
     line_data.reverse()
     line_df = DataFrame(line_data)
@@ -248,51 +262,66 @@ for x in parsed_responses_daily:
     # get symbol
     sym = x["Meta Data"]["2. Symbol"]
 
-    # get recent high and date
+    # get 52wk high and date
     high_prices = []
-    for d in tsd:
-        high_price = float(tsd[d]["2. high"])
-        high_prices.append(high_price)
+    iterate = 1
+    for d in tsw:
+        if iterate <= 52:
+            high_price = float(tsw[d]["2. high"])
+            high_prices.append(high_price)
+            iterate += 1
+        else:
+            break
+    
+    ftweek_high = float(max(high_prices))
 
-    recent_high = float(max(high_prices))
+    # get date for 52wk high 
+    iterate = 1
+    for d in tsw:
+        if iterate <= 52:
+            if float(tsw[d]["2. high"]) == ftweek_high:
+                ftweek_high_date = d
+                ftweek_high_datef = datetime.strptime(ftweek_high_date,'%Y-%m-%d').date()
+                iterate += 1
+        else:
+            break
 
-    # get date for recent high 
-    for d in tsd:
-        if float(tsd[d]["2. high"]) == recent_high:
-            recent_high_date = d
-            recent_high_datef = datetime.strptime(recent_high_date,'%Y-%m-%d').date()
-
-    # plot price graph and recent high line
+    # plot price graph and 52wk high line
     plt.figure(count,figsize=(12,5))
     plt.subplot(1,2,1)
-    plt.plot(line_df.Date, line_df.StockPrice, label="Daily Close Price")
+    plt.plot(line_df.Date, line_df.StockPrice, label="Weekly Close Price")
     plt.ylabel("Stock Price ($)")
     plt.xlabel("Date")
-    plt.axhline(y=recent_high, color='r', label=f"Recent High: {recent_high_datef}")
+    plt.axhline(y=ftweek_high, color='r', label=f"52 Week High: {ftweek_high_datef}")
     plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
                 borderaxespad=0, frameon=False)
-    plt.title(f"Plot of Prices for {sym}", y=1.07)
+    plt.title(f"Plot of Weekly Prices for {sym}", y=1.07)
 
     # create data frame for volume
     volumeline_data = []
-    for d in tsd:
-        d_date2 = datetime.strptime(d,'%Y-%m-%d').date()
-        entry = {"Date": d_date2, "Volume": int(tsd[d]["5. volume"])}
-        volumeline_data.append(entry)
+    iterate = 1
+    for d in tsw:
+        if iterate <= 52:
+            d_date2 = datetime.strptime(d,'%Y-%m-%d').date()
+            entry = {"Date": d_date2, "Volume": int(tsw[d]["5. volume"])}
+            volumeline_data.append(entry)
+            iterate += 1
+        else:
+            break
 
     volumeline_data.reverse()
     volumeline_df = DataFrame(volumeline_data)
-    yesterday_volume = int(tsd[yesterday]["5. volume"])
+    lastwk_volume = int(tsw[lastwk]["5. volume"])
 
-    # plot volume graph and recent high volume line
+    # plot volume graph and 52 wk high volume line
     plt.subplot(1,2,2)
-    plt.plot(volumeline_df.Date, volumeline_df.Volume, label="Daily Volume")
-    plt.ylabel("Daily Volume (# Shares)")
+    plt.plot(volumeline_df.Date, volumeline_df.Volume, label="Weekly Volume")
+    plt.ylabel("Weekly Volume (# Shares)")
     plt.xlabel("Date")
-    plt.axhline(y=yesterday_volume, color='r', label=f"Previous Day's Volume: {yesterday_date}")
+    plt.axhline(y=lastwk_volume, color='r', label=f"Last Week's Volume: {lastwk_date}")
     plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
                 borderaxespad=0, frameon=False)
-    plt.title(f"Plot of Daily Volume for {sym}", y=1.07)
+    plt.title(f"Plot of Weekly Volume for {sym}", y=1.07)
     plt.savefig(f'visualizations/pricesandvolumes_{sym}.png')
 
     count += 1
