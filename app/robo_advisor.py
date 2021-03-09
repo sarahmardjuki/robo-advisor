@@ -126,34 +126,37 @@ for x in parsed_responses_weekly:
         else:
             break
 
-    # volume
+    # volume and last week volume
     lastwk = dates[1]
     latest_volume = int(tsw[latest_day]["5. volume"])
     lastwk_volume = int(tsw[lastwk]["5. volume"])
     lastwk_date = datetime.strptime(lastwk,'%Y-%m-%d').date()
 
+    # last week high
+    lastwk_high = float(tsw[lastwk]["2. high"])
+
     # recommendation/reason
-    # if close price is > 52wk high and volume is > last week's volume, then BUY
-    if (latest_close > ftweek_high) and (latest_volume > lastwk_volume):
+    # if close price is > last week's high and volume is > last week's volume, then BUY, otherwise DON'T BUY
+    if (latest_close > lastwk_high) and (latest_volume > lastwk_volume):
         latest_volume = "{:,}".format(latest_volume)
         lastwk_volume = "{:,}".format(lastwk_volume)
         recommendation = "BUY"
-        reason = f"{sym}'s latest close of {to_usd(latest_close)} is greater than its 52-week high of {to_usd(ftweek_high)}, and its most recent volume of {latest_volume} is also greater than last week's volume of {lastwk_volume}. This indicates that demand will likely continue pushing the price up."
-    elif (latest_close > ftweek_high) and (latest_volume <= lastwk_volume):
+        reason = f"{sym}'s latest close of {to_usd(latest_close)} is greater than last week's high of {to_usd(lastwk_high)}, and its most recent volume of {latest_volume} shares is also greater than last week's volume of {lastwk_volume} shares. This indicates that demand will likely continue pushing the price up."
+    elif (latest_close > lastwk_high) and (latest_volume <= lastwk_volume):
         latest_volume = "{:,}".format(latest_volume)
         lastwk_volume= "{:,}".format(lastwk_volume)
         recommendation = "DON'T BUY"
-        reason = f"{sym}'s latest close of {to_usd(latest_close)} is greater than its 52-week high of {to_usd(ftweek_high)}, but its most recent volume of {latest_volume} is not greater than last week's volume of {lastwk_volume}. This indicates that it is likely not demand pushing the price up, and the price may not continue increasing."
-    elif (latest_close <= ftweek_high) and (latest_volume > lastwk_volume):
+        reason = f"{sym}'s latest close of {to_usd(latest_close)} is greater than last week's high of {to_usd(lastwk_high)}, but its most recent volume of {latest_volume} shares is not greater than last week's volume of {lastwk_volume} shares. This indicates that it is likely not demand pushing the price up, and the price may not continue increasing."
+    elif (latest_close <= lastwk_high) and (latest_volume > lastwk_volume):
         latest_volume = "{:,}".format(latest_volume)
         lastwk_volume = "{:,}".format(lastwk_volume)
         recommendation = "DON'T BUY"
-        reason = f"Even though {sym}'s most recent volume of {latest_volume} is greater than last week's volume of {lastwk_volume}, its latest close of {to_usd(latest_close)} is not greater than its 52-week high of {to_usd(float(ftweek_high))}."
-    elif (latest_close <= ftweek_high) and (latest_volume <= lastwk_volume):
+        reason = f"Even though {sym}'s most recent volume of {latest_volume} shares is greater than last week's volume of {lastwk_volume} shares, its latest close of {to_usd(latest_close)} is not greater than last week's high of {to_usd(lastwk_high)}."
+    elif (latest_close <= lastwk_high) and (latest_volume <= lastwk_volume):
         latest_volume = "{:,}".format(latest_volume)
         lastwk_volume = "{:,}".format(lastwk_volume)
         recommendation = "DON'T BUY"
-        reason = f"{sym}'s latest close of {to_usd(latest_close)} is not greater than its 52-week high of {to_usd(ftweek_high)}, and its most recent volume of {latest_volume} is not greater than last week's volume of {lastwk_volume}. This indicates that there is not much interest in this stock, and the price may not increase in the near future."
+        reason = f"{sym}'s latest close of {to_usd(latest_close)} is not greater than last week's high of {to_usd(lastwk_high)}, and its most recent volume of {latest_volume} shares is not greater than last week's volume of {lastwk_volume} shares. This indicates that there is not much interest in this stock, and the price may not increase in the near future."
 
 
     
@@ -262,37 +265,21 @@ for x in parsed_responses_weekly:
     # get symbol
     sym = x["Meta Data"]["2. Symbol"]
 
-    # get 52wk high and date
-    high_prices = []
-    iterate = 1
-    for d in tsw:
-        if iterate <= 52:
-            high_price = float(tsw[d]["2. high"])
-            high_prices.append(high_price)
-            iterate += 1
-        else:
-            break
-    
-    ftweek_high = float(max(high_prices))
+    # get last week's high and date
+    dates = list(tsw.keys())
+    dates.sort(key=lambda date:datetime.strptime(date,"%Y-%m-%d"), reverse = True)
+    lastwk = dates[1]
+    lastwk_date = datetime.strptime(lastwk,'%Y-%m-%d').date()
+    lastwk_high = float(tsw[lastwk]["2. high"])
 
-    # get date for 52wk high 
-    iterate = 1
-    for d in tsw:
-        if iterate <= 52:
-            if float(tsw[d]["2. high"]) == ftweek_high:
-                ftweek_high_date = d
-                ftweek_high_datef = datetime.strptime(ftweek_high_date,'%Y-%m-%d').date()
-                iterate += 1
-        else:
-            break
 
-    # plot price graph and 52wk high line
+    # plot price graph and last week's high line
     plt.figure(count,figsize=(12,5))
     plt.subplot(1,2,1)
     plt.plot(line_df.Date, line_df.StockPrice, label="Weekly Close Price")
     plt.ylabel("Stock Price ($)")
     plt.xlabel("Date")
-    plt.axhline(y=ftweek_high, color='r', label=f"52 Week High: {ftweek_high_datef}")
+    plt.axhline(y=lastwk_high, color='r', label=f"Last Week's High ({lastwk_date})")
     plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
                 borderaxespad=0, frameon=False)
     plt.title(f"Plot of Weekly Prices for {sym}", y=1.07)
@@ -318,7 +305,7 @@ for x in parsed_responses_weekly:
     plt.plot(volumeline_df.Date, volumeline_df.Volume, label="Weekly Volume")
     plt.ylabel("Weekly Volume (# Shares)")
     plt.xlabel("Date")
-    plt.axhline(y=lastwk_volume, color='r', label=f"Last Week's Volume: {lastwk_date}")
+    plt.axhline(y=lastwk_volume, color='r', label=f"Last Week's Volume ({lastwk_date})")
     plt.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=2,
                 borderaxespad=0, frameon=False)
     plt.title(f"Plot of Weekly Volume for {sym}", y=1.07)
